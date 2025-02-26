@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import face_recognition
+import reactangle
 import os
 import pandas as pd
 from datetime import datetime
@@ -10,7 +11,7 @@ video_dir = "Recorded_Videos"
 if not os.path.exists(video_dir):
     os.makedirs(video_dir)
 
-# Initialize video capture
+# Initialize video capture  
 cap = cv2.VideoCapture(0)
 
 # Get video properties
@@ -20,7 +21,7 @@ frame_height = int(cap.get(4))
 # Define codec and create VideoWriter object
 video_filename = os.path.join(video_dir, "video_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".mp4")
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use 'XVID' if 'mp4v' doesn't work
-out = cv2.VideoWriter(video_filename, fourcc, 20.0, (frame_width, frame_height))
+out = cv2.VideoWriter(video_filename, fourcc, 30.0, (frame_width, frame_height))
 
 # Face recognition setup
 path = 'Training_images'
@@ -58,9 +59,13 @@ def markAttendance(name, status):
 encodeListKnown = findEncodings(images)
 print('Encoding Complete')
 
-person_present = False
-entry_time = None
-
+tracked_persons = {}
+### Turn time into readable format 
+def readable_time(seconds):
+            hours=seconds//3600
+            min=(seconds%3600)/60
+            sec=seconds%60
+            return f"{int(hours)}h {int(min)}m {int(sec)}s"
 while True:
     success, img = cap.read()
     if not success:
@@ -72,7 +77,8 @@ while True:
     facesCurFrame = face_recognition.face_locations(imgS)
     encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
 
-    person_detected = False
+    detected_names = set()
+    
     for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
         matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
         faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
@@ -80,24 +86,23 @@ while True:
 
         if matchIndex is not None and matches[matchIndex]:
             name = classNames[matchIndex].upper()
-            y1, x2, y2, x1 = faceLoc
-            y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(img, name, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+            detected_names.add(name)
 
-            # Person detected, mark attendance
-            if not person_present:
+            # Draw rectangle and name
+            reactangle.rectangle(img,faceLoc,name)
+            
+            # Track entry and exit
+            if name not in tracked_persons:
+                tracked_persons[name] = {'entry': datetime.now(), 'exit': None}
                 markAttendance(name, "Entry")
-                entry_time = datetime.now()
-                person_present = True
-            person_detected = True
 
-    # If person leaves, mark exit
-    if person_present and not person_detected:
-        exit_time = datetime.now()
-        duration = (exit_time - entry_time).total_seconds()
-        markAttendance(name, f"Exit - Duration: {duration} sec")
-        person_present = False
+    # Check for exits
+    for name in list(tracked_persons.keys()):
+        if name not in detected_names and tracked_persons[name]['exit'] is None:
+            tracked_persons[name]['exit'] = datetime.now()
+            duration = (tracked_persons[name]['exit'] - tracked_persons[name]['entry']).total_seconds()
+            total_time=readable_time(duration)
+            markAttendance(name, f"Exit - Duration: {total_time} sec")
 
     # Write frame to video file
     out.write(img)
@@ -112,6 +117,3 @@ while True:
 cap.release()
 out.release()
 cv2.destroyAllWindows()
-
-# Print saved video location
-
