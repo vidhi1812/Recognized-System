@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import face_recognition
-import reactangle
+import reactangle , mark_attendance
 import os
 import pandas as pd
 from datetime import datetime
@@ -44,17 +44,7 @@ def findEncodings(images):
             encodeList.append(encodings[0])
     return encodeList
 
-def markAttendance(name, status):
-    attendance_path = 'Attendance.csv'
 
-    if not os.path.isfile(attendance_path):
-        with open(attendance_path, 'w') as f:
-            f.write('Name,Status,Time\n')
-
-    with open(attendance_path, 'a') as f:
-        now = datetime.now()
-        dtString = now.strftime('%Y-%m-%d %H:%M:%S')
-        f.write(f'{name},{status},{dtString}\n')
 
 encodeListKnown = findEncodings(images)
 print('Encoding Complete')
@@ -94,7 +84,7 @@ while True:
             # Track entry and exit
             if name not in tracked_persons:
                 tracked_persons[name] = {'entry': datetime.now(), 'exit': None}
-                markAttendance(name, "Entry")
+                mark_attendance.markAttendance(name, "Entry", "Attendance.csv")
 
     # Check for exits
     for name in list(tracked_persons.keys()):
@@ -102,7 +92,7 @@ while True:
             tracked_persons[name]['exit'] = datetime.now()
             duration = (tracked_persons[name]['exit'] - tracked_persons[name]['entry']).total_seconds()
             total_time=readable_time(duration)
-            markAttendance(name, f"Exit - Duration: {total_time} sec")
+            mark_attendance.markAttendance(name, f"Exit - Duration: {total_time} sec", "Attendance.csv")
 
     # Write frame to video file
     out.write(img)
