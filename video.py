@@ -4,13 +4,15 @@ import face_recognition
 import reactangle , mark_attendance
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime 
+from pathlib import Path
 
 # Ensure the video directory exists
-video_dir = "Recorded_Videos"
-if not os.path.exists(video_dir):
-    os.makedirs(video_dir)
-
+# video_dir = "Recorded_Videos"
+# if not os.path.exists(video_dir):
+#     os.makedirs(video_dir)
+video_dir="Recorded_Videos"
+Path(video_dir).mkdir(exist_ok=True)
 # Initialize video capture  
 cap = cv2.VideoCapture(0)
 
@@ -19,7 +21,7 @@ frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 
 # Define codec and create VideoWriter object
-video_filename = os.path.join(video_dir, "video_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".mp4")
+video_filename = os.path.join(video_dir, "video_" + datetime.now().strftime("%Y_%B_%d_%H-%M-%S") + ".mp4")
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use 'XVID' if 'mp4v' doesn't work
 out = cv2.VideoWriter(video_filename, fourcc, 30.0, (frame_width, frame_height))
 
@@ -82,7 +84,7 @@ while True:
             reactangle.rectangle(img,faceLoc,name)
             
             # Track entry and exit
-            if name not in tracked_persons:
+            if name not in tracked_persons:    
                 tracked_persons[name] = {'entry': datetime.now(), 'exit': None}
                 mark_attendance.markAttendance(name, "Entry", "Attendance.csv")
 
