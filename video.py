@@ -21,7 +21,7 @@ frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 
 # Define codec and create VideoWriter object
-video_filename = os.path.join(video_dir, "video_" + datetime.now().strftime("%Y_%B_%d_%H-%M-%S") + ".mp4")
+video_filename = os.path.join(video_dir, "video_" + datetime.now().strftime("%Y_%B_%d_%I_%M_%S %p") + ".mp4")
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use 'XVID' if 'mp4v' doesn't work
 out = cv2.VideoWriter(video_filename, fourcc, 30.0, (frame_width, frame_height))
 
@@ -86,7 +86,7 @@ while True:
             # Track entry and exit
             if name not in tracked_persons:    
                 tracked_persons[name] = {'entry': datetime.now(), 'exit': None}
-                mark_attendance.markAttendance(name, "Entry", "Attendance.csv")
+                mark_attendance.markAttendance(name, "Entry")
 
     # Check for exits
     for name in list(tracked_persons.keys()):
@@ -94,7 +94,8 @@ while True:
             tracked_persons[name]['exit'] = datetime.now()
             duration = (tracked_persons[name]['exit'] - tracked_persons[name]['entry']).total_seconds()
             total_time=readable_time(duration)
-            mark_attendance.markAttendance(name, f"Exit - Duration: {total_time} sec", "Attendance.csv")
+            mark_attendance.markAttendance(name, "Exit")
+
 
     # Write frame to video file
     out.write(img)
