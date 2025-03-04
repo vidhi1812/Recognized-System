@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../login/login.css";
-import "../Signup/Signup.css"
+
 const Signup = ({toggleform})=> {
    const[formData, setformData]=useState({
     name:"",

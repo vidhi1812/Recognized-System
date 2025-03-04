@@ -63,3 +63,14 @@ align-items: center;
   padding: 0rem;
   font-size: .8rem;
 }
+.log-field1{
+    display:inline-block;
+    justify-content: center;
+    align-items: center;
+    /* border:1px solid black ; */
+    width:22vw;
+    height:60vh;
+    padding: .6rem 1.2rem;
+    margin:.4rem;
+    box-shadow: 5px 5px 15px rgba(172, 18, 18, 0.5);
+}
