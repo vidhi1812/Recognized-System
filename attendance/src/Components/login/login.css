@@ -13,28 +13,25 @@
     justify-content: center;
     align-items: center;
     /* border:1px solid black ; */
-    width:24vw;
+    width:22vw;
     height:50vh;
-    padding: 1rem 1.3rem;
-    margin:1rem;
+    padding: .6rem 1.2rem;
+    margin:.4rem;
     box-shadow: 5px 5px 15px rgba(172, 18, 18, 0.5);
 }
 .head{
     display: flex;
     justify-content: center;
     align-items: center;
-    letter-spacing: .5rem;
+    letter-spacing: .2rem;
 }
 .field2 input{
 
     display:column;
     justify-content: center;
-    width:22vw;
+    width:20vw;
     height:2.4vw;
-    margin:1rem ;
-    
-    color:white;
-   
+    margin:.5rem ;  
 }
 
 .forgot{
@@ -47,7 +44,7 @@
 .btn{
     width:17vw;
     height:2.4rem;
-    margin:1.8rem 3.2rem ;
+    margin:1.8rem 2.5rem ;
     border-radius:.5rem;
     border:none;
   background-color: green;
@@ -62,7 +59,7 @@ align-items: center;
      padding: 0px;;
 }
 .para p {
-  margin:0 4.3rem;
+  margin:0 4rem;
   padding: 0rem;
   font-size: .8rem;
 }
