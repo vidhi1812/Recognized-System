@@ -1,15 +1,19 @@
 import React, { useState } from "react";
 import "../login/login.css";
+import { loginUser } from "../../api";
 const Login = ({toggleform}) => {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState({})
+  const[message,setMessage]=useState("");
   
   
 
-  const handlesubmit = (e) => {
+  const handlesubmit = async (e) => {
     e.preventDefault();
+   
+  
     let errors = {};
 
     if (!email && !password) {
@@ -25,10 +29,26 @@ const Login = ({toggleform}) => {
     setError(errors);
 
     if (Object.keys(errors).length === 0) {
-      console.log("LOGIN", { email, password });
-      setEmail("");
-      setPassword("");
-      setError({});
+      try {
+         const response=await loginUser({email,password});
+
+         if(response.token){
+          localStorage.setItem("token",response.token);
+          setMessage("Login Successfully");
+          setEmail("");
+          setPassword("");
+          setError({});
+         }
+         else{
+          setError({general:response.message});
+         }
+      } catch (err) {
+     setError({general:"Invalid Credentials"});
+        
+      }
+    }
+    else{
+      setError(errors);
     }
   };
 
@@ -39,6 +59,7 @@ const Login = ({toggleform}) => {
           {" "}
           <h1>Login</h1>
         </div>
+
         {error.general && <p className="error">{error.general}</p>}
         
         <form onSubmit={handlesubmit}>
@@ -70,6 +91,7 @@ const Login = ({toggleform}) => {
 
         </button>
         </form>
+        {message && <p className="success">{message}</p>}
         <div className="para">
           <p>
             "Do not have an account?"
