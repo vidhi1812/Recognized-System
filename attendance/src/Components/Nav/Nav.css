@@ -1,0 +1,57 @@
+.Nav {
+  width: 95%;
+  height: 20%;
+  /* border: 2px solid black; */
+  padding: 1rem;
+  margin: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: blanchedalmond;
+}
+.nav-left {
+  display: flex;
+  justify-content: flex-start;
+  /* border: 2px solid black; */
+  margin: 1rem 2rem;
+}
+
+.nav-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  /* margin: 1rem 3rem 2rem 5rem; */
+}
+
+.list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5.5rem;
+  list-style: none;
+  font-size: 1.5rem;
+}
+.list1::hover{
+    color:rgb(170, 20, 20);
+}
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+  /* border: 2px solid black; */
+  margin: 1rem 2rem;
+  width:6rem;
+  height:2.4rem;
+  /* margin-left: 10rem; */
+}
+.log-btn{
+
+width:6rem;
+height:2.4rem;
+align-items: center;
+background-color: rgb(44, 201, 44);
+font-size: 1rem;
+border-radius: .4rem;
+
+
+}

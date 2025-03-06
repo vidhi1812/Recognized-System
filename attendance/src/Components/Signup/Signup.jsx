@@ -1,5 +1,6 @@
 import React,{ useState } from "react";
-import "";
+import "../login/login.css";
+import { registerUser } from "../../api";
 
 const Signup = ({ toggleform }) => {
   const [formData, setformData] = useState({
@@ -10,13 +11,14 @@ const Signup = ({ toggleform }) => {
   });
 
   const [error, setError] = useState({});
-
+  const[message, setMessage]=useState("");
   const handleChange = (e) => {
     setformData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
+   
     let errors = {};
 
     if (!formData.name) errors.name = "Name is required";
@@ -27,16 +29,24 @@ const Signup = ({ toggleform }) => {
       errors.confirmPassword = "Passwords do not match.";
 
     if (Object.keys(errors).length === 0) {
-      console.log("Signup Data:", formData);
-      setformData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-      setError({});
-    } else {
-      setError(errors);
+      try {
+        const response= await registerUser({
+          name:"formData.name",
+          email:"formData.email",
+          password:"formData.password"
+        })
+        if(response.message){
+          setMessage(response.message);
+           setformData({name:" ",email:" ", password: " "});
+           setError({});
+        }
+      } catch (err) {
+        setError({general:err.message});
+
+      }
+    }
+    else{
+      setError(error);
     }
   };
 
@@ -46,6 +56,7 @@ const Signup = ({ toggleform }) => {
         <div className="head">
           <h1>Signup</h1>
         </div>
+        {message && <p className="success" >{message}</p>}
         {error.general && <p className="error">{error.general}</p>}
 
         <form onSubmit={handleSubmit}>
