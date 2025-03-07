@@ -1,9 +1,7 @@
 import React from 'react'
-// import {useNavigate} from "react-router-dom"
 import "../Nav/Nav.css"
 const Nav = () => {
-  // const navigate=useNavigate();
-
+  
 
   
   

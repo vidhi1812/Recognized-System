@@ -1,11 +1,11 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:4001", // Change this if using a different backend URL
+  baseURL: "http://localhost:4001", 
   headers: { "Content-Type": "application/json" },
 });
 
-// Register (SignUp)
+
  const registerUser = async (userData) => {
   try {
     const response = await API.post("/signup", userData);
@@ -15,7 +15,7 @@ const API = axios.create({
   }
 };
 
-// Login
+
  const loginUser = async (userData) => {
   try {
     const response = await API.post("/login", userData);
