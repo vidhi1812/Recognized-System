@@ -1,119 +1,121 @@
 import cv2
 import numpy as np
-import face_recognition
-import rectangle
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
+from deepface import DeepFace
+from scipy.spatial.distance import cosine 
 
-# Ensure the video directory exists
-video_dir = "Recorded_Videos"
-if not os.path.exists(video_dir):
-    os.makedirs(video_dir)
+# Initialize attendance DataFrame with proper columns
+columns = [
+    'Employee Name', 'Entry Date', 'Entry Time', 'Exit Date', 'Exit Time', 'Total Duration'
+]
+attendance_path = 'Attendance.csv'
 
-# Initialize video capture  
-cap = cv2.VideoCapture(0)
+# Create a fresh DataFrame
+try:
+    if os.path.exists(attendance_path):
+        df = pd.read_csv(attendance_path)
+        if list(df.columns) != columns:
+            df = pd.DataFrame(columns=columns)
+            df.to_csv(attendance_path, index=False)
+    else:
+        df = pd.DataFrame(columns=columns)
+        df.to_csv(attendance_path, index=False)
+except:
+    df = pd.DataFrame(columns=columns)
+    df.to_csv(attendance_path, index=False)
 
-# Get video properties
-frame_width = int(cap.get(3))
-frame_height = int(cap.get(4))
+# Load Camera
+webcam = cv2.VideoCapture(0)  # Single camera setup
 
-# Define codec and create VideoWriter object
-video_filename = os.path.join(video_dir, "video_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".mp4")
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use 'XVID' if 'mp4v' doesn't work
-out = cv2.VideoWriter(video_filename, fourcc, 30.0, (frame_width, frame_height))
-
-# Face recognition setup
+# Load and encode known faces from "Training_images" folder
 path = 'Training_images'
-images = []
 classNames = []
 myList = os.listdir(path)
+face_representations = {}
 
 for cl in myList:
-    curImg = cv2.imread(f'{path}/{cl}')
-    if curImg is not None:  # Ensure valid image
-        images.append(curImg)
-        classNames.append(os.path.splitext(cl)[0])
+    classNames.append(os.path.splitext(cl)[0])
+    face_representations[os.path.splitext(cl)[0]] = DeepFace.represent(f'{path}/{cl}', model_name='Facenet', enforce_detection=False)[0]['embedding']
 
-def findEncodings(images):
-    encodeList = []
-    for img in images:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        encodings = face_recognition.face_encodings(img)
-        if encodings:  # Check if encoding exists
-            encodeList.append(encodings[0])
-    return encodeList
-
-def markAttendance(name, status):
-    attendance_path = 'Attendance.csv'
-
-    if not os.path.isfile(attendance_path):
-        with open(attendance_path, 'w') as f:
-            f.write('Name,Status,Time\n')
-
-    with open(attendance_path, 'a') as f:
-        now = datetime.now()
-        dtString = now.strftime('%Y-%m-%d %H:%M:%S')
-        f.write(f'{name},{status},{dtString}\n')
-
-encodeListKnown = findEncodings(images)
-print('Encoding Complete')
-
+# Store entry and exit times
 tracked_persons = {}
-### Turn time into readable format 
-def readable_time(seconds):
-            hours=seconds//3600
-            min=(seconds%3600)/60
-            sec=seconds%60
-            return f"{int(hours)}h {int(min)}m {int(sec)}s"
-while True:
-    success, img = cap.read()
-    if not success:
-        break
 
-    imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
-    imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
+# Function to calculate duration
+def calculate_duration(entry_time, exit_time):
+    duration = int((exit_time - entry_time).total_seconds())
+    hr,remain=divmod(duration, 3600)
+    min,sec=divmod(remain, 60)
+    return f"{hr:02d}:{min:02d}:{sec:02d}"
 
-    facesCurFrame = face_recognition.face_locations(imgS)
-    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
 
-    detected_names = set()
+######################  Use to be optimized the function as it fails in many scenerios ###################################
+# Function to mark attendance
+def markAttendance(name, entry_datetime, exit_datetime, duration):
+    global df
+    entry_date = entry_datetime.strftime('%Y-%m-%d')
+    entry_time = entry_datetime.strftime('%H:%M:%S')
+    exit_date = exit_datetime.strftime('%Y-%m-%d')
+    exit_time = exit_datetime.strftime('%H:%M:%S')
+
+    incomplete_entry = df[(df['Employee Name'] == name) & (df['Entry Date'] == entry_date) & pd.isna(df['Exit Date'])]
     
-    for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-        matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-        faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-        matchIndex = np.argmin(faceDis) if faceDis.size > 0 else None
+    if not incomplete_entry.empty:
+        idx = incomplete_entry.index[0]
+        df.loc[idx, 'Exit Date'] = exit_date
+        df.loc[idx, 'Exit Time'] = exit_time
+        df.loc[idx, 'Total Duration'] = duration
+    else:
+        new_record = {
+            'Employee Name': name, 'Entry Date': entry_date, 'Entry Time': entry_time,
+            'Exit Date': exit_date, 'Exit Time': exit_time, 'Total Duration': duration
+        }
+        df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)
+    
+    df.to_csv(attendance_path, index=False)
+    print(f"Attendance marked for {name}")
 
-        if matchIndex is not None and matches[matchIndex]:
-            name = classNames[matchIndex].upper()
-            detected_names.add(name)
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-            # Draw rectangle and name
-            rectangle.rectangle(img,faceLoc,name)
-            
-            # Track entry and exit
-            if name not in tracked_persons:
-                tracked_persons[name] = {'entry': datetime.now(), 'exit': None}
-                markAttendance(name, "Entry")
-
-    # Check for exits
-    for name in list(tracked_persons.keys()):
-        if name not in detected_names and tracked_persons[name]['exit'] is None:
-            tracked_persons[name]['exit'] = datetime.now()
-            duration = (tracked_persons[name]['exit'] - tracked_persons[name]['entry']).total_seconds()
-            total_time=readable_time(duration)
-            markAttendance(name, f"Exit - Duration: {total_time} sec")
-
-    # Write frame to video file
-    out.write(img)
-
-    # Display the recording in real time
-    cv2.imshow('Recording...', img)
-
-    # Press 'q' to stop recording
+while True:
+    ret, frame = webcam.read()
+    if not ret:
+        print("Failed to capture frame from webcam")
+        continue
+    
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
+    
+    if len(faces) == 0:
+        print("No faces detected")
+    else:
+        for (x, y, w, h) in faces:
+            face_crop = frame[y:y+h, x:x+w]
+            try:
+                face_embedding = DeepFace.represent(face_crop, model_name='Facenet', enforce_detection=False)
+                if face_embedding:
+                    embedding = face_embedding[0]['embedding']
+                    distances ={name:cosine(face_representations[name],embedding) for name in classNames} 
+                    recognized_name = min(distances, key=distances.get)
+                    print(f"Recognition confidence: {distances[recognized_name]}")
+                    if distances[recognized_name] < 0.7:
+                        if recognized_name not in tracked_persons:
+                            tracked_persons[recognized_name] = {'entry': datetime.now(), 'exit': None}
+                            print(f"Marked Entry: {recognized_name}")
+                        elif tracked_persons[recognized_name]['exit'] is None:
+                            tracked_persons[recognized_name]['exit'] = datetime.now()
+                            duration = calculate_duration(tracked_persons[recognized_name]['entry'], tracked_persons[recognized_name]['exit'])
+                            markAttendance(recognized_name, tracked_persons[recognized_name]['entry'], tracked_persons[recognized_name]['exit'], duration)
+                            print(f"Marked Exit: {recognized_name} - Duration: {duration}")
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    cv2.putText(frame, recognized_name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            except Exception as e:
+                print(f"DeepFace Error: {e}")
+    
+    cv2.imshow("Webcam", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-cap.release()
-out.release()
+webcam.release()
 cv2.destroyAllWindows()
