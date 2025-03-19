@@ -1,0 +1,41 @@
+.preview-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Makes sure it takes full width */
+  }
+  
+  .preview-image {
+    width: 80%; /* Adjust width to make it bigger */
+    
+    height: auto; /* Maintains aspect ratio */
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn-small {
+    background-color: #007bff;
+    color: white;
+    padding: 0.2rem 0.5rem; /* Small padding */
+    border: none;
+    border-radius: 0.3rem; 
+    cursor: pointer;
+    font-size: 0.8rem; 
+    margin: 0.2rem;
+    width:30%;
+    height:20%;
+  }
+  
+  .upload-options {
+    display: flex;
+    gap: 0.3rem; /* Adds small spacing */
+  }
+  
+  .webcam-preview {
+    width: 50%; /* Large preview */
+    height:20%;
+    height: auto;
+    border-radius: 8px;
+  }
+  

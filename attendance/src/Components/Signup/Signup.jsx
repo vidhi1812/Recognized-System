@@ -1,5 +1,7 @@
-import React,{ useState } from "react";
+import React,{ useRef, useState } from "react"
+import Webcam from "react-webcam"
 import "../login/login.css";
+import "../Signup/Signup.css"
 import { registerUser } from "../../api";
 
 const Signup = ({ toggleform }) => {
@@ -12,6 +14,29 @@ const Signup = ({ toggleform }) => {
 
   const [error, setError] = useState({});
   const[message, setMessage]=useState("");
+  const[image,setImage]=useState(null);
+  const[useWebcame,setWebcame]=useState(false);
+
+
+  const webcame=useRef(null);
+
+  const capturePhoto= () =>{
+     if(webcame.current){
+  const imageSrc=webcame.current.getScreenshot();
+  setImage(imageSrc);
+     }
+  };
+
+  const handleFileUpload=(e)=>{
+    const file=e.target.files[0];
+    if(file){
+      const render=new FileReader();
+      render.onloadend= () =>{
+        setImage(render.result);
+      }
+      render.readAsDataURL(file);
+    }
+  };
   const handleChange = (e) => {
     setformData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -27,17 +52,20 @@ const Signup = ({ toggleform }) => {
     if (!formData.confirmPassword) errors.confirmPassword = "Confirm password is required";
     if (formData.password !== formData.confirmPassword)
       errors.confirmPassword = "Passwords do not match.";
+    if(!image) errors.image="Image is required!"
 
     if (Object.keys(errors).length === 0) {
       try {
         const response= await registerUser({
-          name:"formData.name",
-          email:"formData.email",
-          password:"formData.password"
+          name:formData.name,
+          email:formData.email,
+          password:formData.password,
+          photo:image
         })
         if(response.message){
           setMessage(response.message);
            setformData({name:" ",email:" ", password: " "});
+           setImage(null);
            setError({});
         }
       } catch (err) {
@@ -46,7 +74,7 @@ const Signup = ({ toggleform }) => {
       }
     }
     else{
-      setError(error);
+      setError(errors);
     }
   };
 
@@ -102,6 +130,35 @@ const Signup = ({ toggleform }) => {
             />
             {error.confirmPassword && <p className="error">{error.confirmPassword}</p>}
           </div>
+          {/* Image Upload Options */}
+          <div className="field2">
+            {image ? (
+              <div className="preview-box">
+                <img src={image} alt="Uploaded" className="preview-image" />
+                <button type="button" onClick={() => setImage(null)} className="btn-small">Change Photo</button>
+              </div>
+            ) : (
+              <>
+                <div className="upload-options">
+                  {useWebcame ? (
+                    <>
+                      <Webcam ref={webcame} screenshotFormat="image/jpeg" className="webcam-preview" />
+                      <button type="button" onClick={capturePhoto} className="btn-small">Capture</button>
+                    </>
+                  ) : (
+                    <>
+                      <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} id="file-upload" />
+                      <label htmlFor="file-upload" className="btn-small">Upload File</label>
+                    </>
+                  )}
+                  <button type="button" onClick={() => setWebcame(!useWebcame)} className="btn-small">
+                    {useWebcame ? "Use File Upload" : "Use Webcam"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          {error.image && <p className="error">{error.image}</p>}
 
           <button className="btn" type="submit">Sign Up</button>
         </form>
