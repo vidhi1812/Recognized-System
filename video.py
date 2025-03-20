@@ -135,7 +135,7 @@ while True:
             embedding = face_embedding[0]['embedding']
             distances = {name: cosine(face_representations[name], embedding) for name in classNames}
             recognized_name = min(distances, key=distances.get)
-            if distances[recognized_name] < 0.55:
+            if distances[recognized_name] < 0.6:
                 if recognized_name not in tracked_persons:
                     tracked_persons[recognized_name] = {'entry': datetime.now(), 'exit': None}
                     print(f"Marked Entry: {recognized_name}")
