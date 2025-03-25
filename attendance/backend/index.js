@@ -7,7 +7,8 @@ import ConnectMongo from "./Db.js";
 import { SignUp, Login } from "../backend/server/controller/authController.js";
 import attendanceRoutes from "../backend/server/routes/attendanceRoute.js" 
 
-const app = express() 
+const app = express()
+
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());

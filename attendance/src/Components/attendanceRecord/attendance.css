@@ -1,0 +1,22 @@
+.attendance-cont{
+    border:2px solid black;
+    height:auto
+}
+.atndnchead{
+    display: flex;
+    justify-content: center;
+     align-items: center;
+}
+
+.atndncro{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border:2px solid black;
+    margin:2rem  15rem;
+    gap:3rem;
+}
+.atndncehd{
+    margin: 3rem;
+    
+}
