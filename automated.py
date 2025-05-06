@@ -9,10 +9,12 @@ from scipy.spatial.distance import cosine
 import threading
 import logging
 import requests
+from dotenv import load_dotenv
 
 # API URLs
-url1 = "http://localhost:8000/api/attendance/entryExit?type=entry"
-url2 = "http://localhost:8000/api/attendance/entryExit?type=exit"
+load_dotenv()
+url1 =os.getenv("ENTRY_URL")
+url2 = os.getenv("EXIT_URL")
 headers = {"Content-Type": "application/json"}
 
 # Configure logging
